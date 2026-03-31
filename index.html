@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>OPPO AI Phone</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{width:100%;height:100%;background:#c9d0e0;display:flex;justify-content:center;align-items:center;font-family:'PingFang SC','Helvetica Neue',Arial,sans-serif;overflow:hidden;}
+::-webkit-scrollbar{width:0;height:0;}
+
+.phone-shell{
+  height:min(100vh, calc(100vw * 852 / 393));
+  width:min(100vw, calc(100vh * 393 / 852));
+  background:#111;
+  border-radius:calc(min(100vh, calc(100vw * 852 / 393)) * 0.063);
+  position:relative;flex-shrink:0;
+  box-shadow:0 0 0 1.5px #444,0 0 0 5px #1a1a1a,0 0 0 6.5px #333,0 40px 100px rgba(0,0,0,0.55);
+}
+.phone-shell::after{
+  content:'';position:absolute;inset:0;
+  border-radius:calc(min(100vh, calc(100vw * 852 / 393)) * 0.063);
+  pointer-events:none;z-index:200;
+  background:linear-gradient(135deg,rgba(255,255,255,0.07) 0%,transparent 45%,rgba(255,255,255,0.02) 100%);
+}
+.key{position:absolute;background:#2c2c2c;}
+.key-vu{left:-0.4%;top:17.4%;width:0.4%;height:5.2%;border-radius:3px 0 0 3px;}
+.key-vd{left:-0.4%;top:24%;width:0.4%;height:5.2%;border-radius:3px 0 0 3px;}
+.key-pw{right:-0.4%;top:20.2%;width:0.4%;height:8.2%;border-radius:0 3px 3px 0;}
+
+.phone-screen{
+  position:absolute;inset:0;
+  border-radius:calc(min(100vh, calc(100vw * 852 / 393)) * 0.063);
+  overflow:hidden;display:flex;flex-direction:column;background:#000;
+}
+.notch{height:1.65%;background:#000;display:flex;justify-content:center;align-items:flex-end;flex-shrink:0;z-index:10;}
+.notch-pill{width:32%;height:250%;background:#000;border-radius:0 0 20px 20px;border:1.5px solid #1c1c1c;border-top:none;}
+
+.statusbar{height:2.8%;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 7%;flex-shrink:0;color:#fff;z-index:10;}
+.sb-time{font-size:clamp(10px,1.5vh,14px);font-weight:600;letter-spacing:0.3px;}
+.sb-right{display:flex;align-items:center;gap:4px;}
+.sig{display:flex;gap:2px;align-items:flex-end;height:clamp(8px,1.4vh,13px);}
+.sig span{background:#fff;width:3px;border-radius:1px;display:block;}
+.sig span:nth-child(1){height:30%;}
+.sig span:nth-child(2){height:50%;}
+.sig span:nth-child(3){height:75%;}
+.sig span:nth-child(4){height:100%;}
+.ntype{font-size:clamp(9px,1.3vh,12px);font-weight:700;}
+.bat{width:clamp(18px,2.8vh,26px);height:clamp(9px,1.4vh,13px);border:1.5px solid rgba(255,255,255,0.75);border-radius:3px;position:relative;padding:1.5px;display:flex;align-items:center;}
+.bat-fill{height:100%;width:65%;background:#fff;border-radius:1px;}
+.bat::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:3px;height:55%;background:rgba(255,255,255,0.55);border-radius:0 2px 2px 0;}
+
+.screen-content{flex:1;overflow:hidden;position:relative;}
+.home-bar{height:3.5%;display:flex;justify-content:center;align-items:center;flex-shrink:0;}
+.home-ind{width:33%;height:4px;background:rgba(255,255,255,0.3);border-radius:5px;}
+
+.loading-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0d1a2e;}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.12);border-top-color:#00c6a2;border-radius:50%;animation:spin 0.75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== 桌面 ===== */
+.desktop{width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.wp-1{background:linear-gradient(160deg,#1a1a3e 0%,#0d2137 45%,#0a3d2b 100%);}
+.wp-2{background:linear-gradient(160deg,#2d1b4e 0%,#1a0a2e 50%,#0d1a3e 100%);}
+.wp-3{background:linear-gradient(160deg,#1a2a1a 0%,#0d1a0d 50%,#1a1a2e 100%);}
+.wp-dark{background:#0a0a0a;}
+
+.dt-block{padding:3.5% 7% 1%;flex-shrink:0;}
+.dt-time{font-size:clamp(36px,7.5vh,68px);font-weight:200;color:#fff;letter-spacing:-2px;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,0.4);}
+.dt-date{font-size:clamp(11px,1.6vh,14px);color:rgba(255,255,255,0.6);margin-top:4px;letter-spacing:0.4px;}
+
+/* ===== 网格 ===== */
+.grid-area{flex:1;padding:1% 3.5% 0;overflow:hidden;position:relative;}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,1fr);height:100%;}
+
+/* ===== 格子 ===== */
+.cell{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding:4% 2% 2%;
+  cursor:pointer;position:relative;border-radius:14px;
+  transition:background 0.15s;
+}
+.cell:active:not(.drag-over){transform:scale(0.9);}
+
+/* 拖拽悬停高亮 */
+.cell.drag-over{
+  background:rgba(255,255,255,0.15);
+  border-radius:14px;
+}
+/* 即将合并为文件夹的高亮 */
+.cell.folder-merge{
+  background:rgba(0,198,162,0.18);
+  border-radius:14px;
+  outline:2px solid rgba(0,198,162,0.6);
+}
+/* 编辑模式选中 */
+.cell.edit-mode{background:rgba(255,255,255,0.07);border-radius:14px;}
+
+/* ===== App 图标 ===== */
+.icon-wrap{
+  width:clamp(36px,7.5vw,58px);height:clamp(36px,7.5vw,58px);
+  border-radius:clamp(9px,1.8vw,16px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.35);
+  position:relative;overflow:hidden;flex-shrink:0;
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.icon-wrap::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(to bottom,rgba(255,255,255,0.18),transparent);border-radius:inherit;pointer-events:none;}
+.icon-letter{font-size:clamp(14px,3vw,24px);font-weight:700;color:#fff;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.icon-name{font-size:clamp(9px,1.3vw,11px);color:rgba(255,255,255,0.88);margin-top:3px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,0.55);width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;}
+
+/* 正在被拖拽的图标半透明 */
+.cell.dragging{opacity:0.35;}
+
+/* 删除按钮 */
+.del-btn{position:absolute;top:2px;left:6px;width:clamp(14px,2vw,18px);height:clamp(14px,2vw,18px);background:#ff3b30;border-radius:50%;color:#fff;font-size:clamp(11px,1.6vw,14px);font-weight:700;display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+
+/* ===== 文件夹 ===== */
+.folder-wrap{
+  width:clamp(36px,7.5vw,58px);height:clamp(36px,7.5vw,58px);
+  border-radius:clamp(9px,1.8vw,16px);
+  background:rgba(255,255,255,0.2);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3);flex-shrink:0;
+}
+.folder-grid{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:2px;width:65%;height:65%;padding:3px;}
+.folder-mini{border-radius:3px;width:100%;height:100%;}
+
+/* ===== 分页点 ===== */
+.page-dots{display:flex;justify-content:center;align-items:center;gap:5px;padding:4px 0 2px;flex-shrink:0;}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.28);display:block;transition:all 0.22s;}
+.dot.active{width:16px;border-radius:3px;background:rgba(255,255,255,0.88);}
+
+/* ===== Dock ===== */
+.dock{height:11%;margin:0 3.5% 1.5%;background:rgba(255,255,255,0.08);border-radius:24px;display:flex;align-items:center;justify-content:space-around;padding:0 4%;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);}
+.dock-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform 0.12s;}
+.dock-item:active{transform:scale(0.88);}
+.dock-item .icon-name{color:rgba(255,255,255,0.75);}
+
+/* ===== 拖拽幽灵图标（跟随鼠标/手指） ===== */
+.drag-ghost{
+  position:fixed;pointer-events:none;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  transform:translate(-50%,-50%) scale(1.12);
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  transition:none;
+}
+.drag-ghost .icon-wrap{ box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+
+/* ===== 文件夹弹窗 ===== */
+.folder-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.folder-popup{width:82%;background:rgba(255,255,255,0.15);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-radius:22px;padding:16px;border:1px solid rgba(255,255,255,0.12);}
+.folder-popup-title{color:#fff;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px;outline:none;background:transparent;border:none;width:100%;font-family:inherit;cursor:text;user-select:text;}
+.folder-popup-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.folder-popup-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+.folder-popup-item .icon-name{color:rgba(255,255,255,0.88);}
+.folder-close-btn{color:rgba(255,255,255,0.85);font-size:13px;cursor:pointer;background:rgba(255,255,255,0.13);padding:8px 28px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);font-family:inherit;}
+
+/* ===== 底部操作菜单 ===== */
+.action-sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:80;display:flex;flex-direction:column;justify-content:flex-end;}
+.action-sheet{background:rgba(28,28,32,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px 18px 0 0;padding:8px 0 16px;border-top:1px solid rgba(255,255,255,0.08);}
+.action-sheet-title{text-align:center;color:rgba(255,255,255,0.4);font-size:11px;padding:8px 0 10px;}
+.action-item{display:flex;align-items:center;gap:12px;padding:13px 20px;color:#fff;font-size:14px;cursor:pointer;}
+.action-item:active{background:rgba(255,255,255,0.06);}
+.action-item.danger{color:#ff453a;}
+.action-sep{height:1px;background:rgba(255,255,255,0.08);margin:2px 0;}
+.action-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+
+/* ===== 编辑提示 ===== */
+.edit-hint{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);color:rgba(255,255,255,0.8);font-size:11px;padding:4px 14px;border-radius:20px;z-index:30;white-space:nowrap;}
+
+/* ===== 动画 ===== */
+.fade-enter-active,.fade-leave-active{transition:opacity 0.18s;}
+.fade-enter-from,.fade-leave-to{opacity:0;}
+.sheet-enter-active,.sheet-leave-active{transition:transform 0.22s cubic-bezier(0.34,1.1,0.64,1);}
+.sheet-enter-from,.sheet-leave-to{transform:translateY(100%);}
+.app-enter-active{transition:transform 0.32s cubic-bezier(0.34,1.15,0.64,1),opacity 0.22s;}
+.app-enter-from{transform:scale(0.82);opacity:0;}
+.app-leave-active{transition:transform 0.2s ease-in,opacity 0.18s;}
+.app-leave-to{transform:scale(0.88);opacity:0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="phone-shell">
+    <div class="key key-vu"></div>
+    <div class="key key-vd"></div>
+    <div class="key key-pw"></div>
+    <div class="phone-screen">
+      <div class="notch"><div class="notch-pill"></div></div>
+
+      <!-- 状态栏 -->
+      <div class="statusbar">
+        <span class="sb-time">{{ sbTime }}</span>
+        <div class="sb-right">
+          <div class="sig"><span></span><span></span><span></span><span></span></div>
+          <span class="ntype">5G</span>
+          <div class="bat"><div class="bat-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="screen-content">
+        <div class="loading-wrap" v-if="!dbReady">
+          <div class="spinner"></div>
+        </div>
+
+        <template v-else>
+          <div
+            class="desktop"
+            :class="'wp-' + settings.wallpaper"
+            ref="desktopRef"
+            @mousedown.self="onBgMousedown"
+            @touchstart.self.passive="onBgTouchstart"
+            @mouseup="onPointerUp"
+            @mousemove="onPointerMove"
+            @touchmove.passive="onTouchMove"
+            @touchend="onPointerUp"
+            @click.self="closeAll"
+          >
+            <transition name="fade">
+              <div class="edit-hint" v-if="editMode">点击空白或 Home 退出编辑</div>
+            </transition>
+
+            <div class="dt-block">
+              <div class="dt-time">{{ bigTime }}</div>
+              <div class="dt-date">{{ bigDate }}</div>
+            </div>
+
+            <!-- 网格 -->
+            <div class="grid-area" ref="gridAreaRef">
+              <div class="grid" ref="gridRef">
+                <div
+                  v-for="(item, idx) in currentPageItems"
+                  :key="'cell-'+idx"
+                  class="cell"
+                  :class="{
+                    'edit-mode': editMode && item,
+                    'dragging':  drag.active && drag.fromIdx === idx,
+                    'drag-over': drag.active && drag.overIdx === idx && drag.fromIdx !== idx && !willMerge(idx),
+                    'folder-merge': drag.active && willMerge(idx)
+                  }"
+                  @mousedown="onCellMousedown($event, idx)"
+                  @touchstart.passive="onCellTouchstart($event, idx)"
+                  @mouseenter="onCellEnter(idx)"
+                  @click="onCellClick($event, idx)"
+                  @contextmenu.prevent="showActionSheet($event, idx)"
+                >
+                  <template v-if="!item"></template>
+
+                  <template v-else-if="item.type==='app'">
+                    <div class="icon-wrap" :style="{background: item.color}">
+                      <span class="icon-letter">{{ item.icon }}</span>
+                    </div>
+                    <div class="icon-name">{{ item.name }}</div>
+                    <div v-if="editMode" class="del-btn" @click.stop="deleteItem(idx)">-</div>
+                  </template>
+
+                  <template v-else-if="item.type==='folder'">
+                    <div class="folder-wrap">
+                      <div class="folder-grid">
+                        <div
+                          v-for="(child,ci) in item.children.slice(0,4)"
+                          :key="ci"
+                          class="folder-mini"
+                          :style="{background: child.color}"
+                        ></div>
+                      </div>
+                    </div>
+                    <div class="icon-name">{{ item.name }}</div>
+                    <div v-if="editMode" class="del-btn" @click.stop="deleteItem(idx)">-</div>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- 分页点 -->
+            <div class="page-dots">
+              <span
+                v-for="(p,pi) in desktopPages"
+                :key="pi"
+                class="dot"
+                :class="{active: pi===currentPage}"
+              ></span>
+            </div>
+
+            <!-- Dock -->
+            <div class="dock">
+              <div
+                v-for="dockApp in dockApps"
+                :key="dockApp.id"
+                class="dock-item"
+                @click="openApp(dockApp)"
+              >
+                <div class="icon-wrap" :style="{background: dockApp.color}">
+                  <span class="icon-letter">{{ dockApp.icon }}</span>
+                </div>
+                <div class="icon-name">{{ dockApp.name }}</div>
+              </div>
+            </div>
+
+            <!-- 拖拽幽灵 -->
+            <transition name="fade">
+              <div
+                class="drag-ghost"
+                v-if="drag.active && drag.ghost"
+                :style="{left: drag.x+'px', top: drag.y+'px'}"
+              >
+                <div class="icon-wrap" :style="{background: drag.ghost.color}">
+                  <span class="icon-letter">{{ drag.ghost.icon }}</span>
+                </div>
+                <div class="icon-name">{{ drag.ghost.name }}</div>
+              </div>
+            </transition>
+
+            <!-- 文件夹弹窗 -->
+            <transition name="fade">
+              <div class="folder-overlay" v-if="openFolder" @click.self="openFolder=null">
+                <div class="folder-popup">
+                  <input
+                    class="folder-popup-title"
+                    v-model="openFolder.name"
+                    @change="saveData"
+                  />
+                  <div class="folder-popup-grid">
+                    <div
+                      v-for="(child,ci) in openFolder.children"
+                      :key="ci"
+                      class="folder-popup-item"
+                      @click="openApp(child)"
+                    >
+                      <div class="icon-wrap" :style="{background: child.color}">
+                        <span class="icon-letter">{{ child.icon }}</span>
+                      </div>
+                      <div class="icon-name">{{ child.name }}</div>
+                    </div>
+                  </div>
+                </div>
+                <button class="folder-close-btn" @click="openFolder=null">关闭</button>
+              </div>
+            </transition>
+
+            <!-- 底部操作菜单 -->
+            <transition name="fade">
+              <div
+                class="action-sheet-overlay"
+                v-if="actionSheet.show"
+                @click.self="actionSheet.show=false"
+              >
+                <transition name="sheet">
+                  <div class="action-sheet" v-if="actionSheet.show">
+                    <div class="action-sheet-title">{{ actionSheet.itemName }}</div>
+                    <div class="action-item" @click="actionRename">
+                      <div class="action-icon" style="background:#2c2c3a">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </div>
+                      重命名
+                    </div>
+                    <div class="action-sep"></div>
+                    <div class="action-item" @click="actionEdit">
+                      <div class="action-icon" style="background:#2c2c3a">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                      </div>
+                      编辑桌面
+                    </div>
+                    <div class="action-sep"></div>
+                    <div class="action-item danger" @click="actionDelete">
+                      <div class="action-icon" style="background:#3a1f1f">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                      </div>
+                      删除
+                    </div>
+                  </div>
+                </transition>
+              </div>
+            </transition>
+
+          </div>
+        </template>
+      </div>
+
+      <div class="home-bar" @click="onHomeClick">
+        <div class="home-ind"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, reactive, onMounted, nextTick } = Vue;
+
+const DEFAULT_APPS = [
+  { id:'app-wechat',   type:'app', name:'微信',    icon:'W', color:'#07c160', appKey:'wechat' },
+  { id:'app-settings', type:'app', name:'设置',    icon:'S', color:'#636366', appKey:'settings' },
+  { id:'app-camera',   type:'app', name:'相机',    icon:'C', color:'#1c1c1e', appKey:'camera' },
+  { id:'app-gallery',  type:'app', name:'相册',    icon:'G', color:'#ff9500', appKey:'gallery' },
+  { id:'app-browser',  type:'app', name:'浏览器',  icon:'B', color:'#0076ff', appKey:'browser' },
+  { id:'app-music',    type:'app', name:'音乐',    icon:'M', color:'#ff2d55', appKey:'music' },
+  { id:'app-clock',    type:'app', name:'时钟',    icon:'T', color:'#ff9500', appKey:'clock' },
+  { id:'app-notes',    type:'app', name:'备忘录',  icon:'N', color:'#ffd60a', appKey:'notes' },
+  { id:'app-files',    type:'app', name:'文件',    icon:'F', color:'#0076ff', appKey:'files' },
+  { id:'app-store',    type:'app', name:'应用市场',icon:'A', color:'#00c6a2', appKey:'store' },
+  { id:'app-phone',    type:'app', name:'电话',    icon:'P', color:'#34c759', appKey:'phone' },
+  { id:'app-contacts', type:'app', name:'联系人',  icon:'U', color:'#5856d6', appKey:'contacts' },
+  { id:'app-video',    type:'app', name:'视频',    icon:'V', color:'#ff6b35', appKey:'video' },
+  { id:'app-map',      type:'app', name:'地图',    icon:'D', color:'#34aadc', appKey:'map' },
+  { id:'app-mail',     type:'app', name:'邮件',    icon:'E', color:'#0076ff', appKey:'mail' },
+];
+const DEFAULT_DOCK = [
+  { id:'dock-phone',    type:'app', name:'电话',   icon:'P', color:'#34c759', appKey:'phone' },
+  { id:'dock-wechat',   type:'app', name:'微信',   icon:'W', color:'#07c160', appKey:'wechat' },
+  { id:'dock-browser',  type:'app', name:'浏览器', icon:'B', color:'#0076ff', appKey:'browser' },
+  { id:'dock-camera',   type:'app', name:'相机',   icon:'C', color:'#1c1c1e', appKey:'camera' },
+  { id:'dock-settings', type:'app', name:'设置',   icon:'S', color:'#636366', appKey:'settings' },
+];
+const DEFAULT_SETTINGS = {
+  wallpaper:'1', apiProvider:'deepseek',
+  apiKey:'', apiBaseUrl:'https://api.deepseek.com', userName:'我',
+};
+const DEFAULT_WECHAT_USERS = [
+  { id:'user-001', name:'AI 助手', avatarColor:'#00c6a2', systemPrompt:'你是一个友善聪明的 AI 助手，用自然轻松的语气聊天。', messages:[], unread:0 },
+  { id:'user-002', name:'林小晴',  avatarColor:'#ff6b9d', systemPrompt:'你扮演叫林小晴的女生，活泼开朗，说话俏皮，不要说自己是AI。', messages:[], unread:0 },
+  { id:'user-003', name:'苏哲',    avatarColor:'#5856d6', systemPrompt:'你扮演叫苏哲的男生，沉稳理性，喜欢技术和哲学，不要说自己是AI。', messages:[], unread:0 },
+];
+
+// ===== IndexedDB =====
+const DB = (() => {
+  const NAME='oppo_db', VER=1, STORE='kv';
+  let _db = null;
+  function open() {
+    return new Promise((res,rej) => {
+      if (_db) return res(_db);
+      const r = indexedDB.open(NAME, VER);
+      r.onupgradeneeded = e => {
+        if (!e.target.result.objectStoreNames.contains(STORE))
+          e.target.result.createObjectStore(STORE);
+      };
+      r.onsuccess = e => { _db = e.target.result; res(_db); };
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+  async function get(key) {
+    const db = await open();
+    return new Promise((res,rej) => {
+      const r = db.transaction(STORE,'readonly').objectStore(STORE).get(key);
+      r.onsuccess = () => res(r.result ?? null);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+  async function set(key,val) {
+    const db = await open();
+    return new Promise((res,rej) => {
+      const r = db.transaction(STORE,'readwrite').objectStore(STORE).put(val,key);
+      r.onsuccess = () => res();
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+  return { get, set };
+})();
+
+// ===== Vue App =====
+createApp({
+  setup() {
+    // 状态栏时间
+    const sbTime = ref('');
+    function updateSbTime() {
+      const d = new Date();
+      sbTime.value = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+    updateSbTime();
+    setInterval(updateSbTime, 10000);
+
+    // 桌面时间
+    const now = ref(new Date());
+    setInterval(() => { now.value = new Date(); }, 1000);
+    const bigTime = computed(() => {
+      const h = now.value.getHours().toString().padStart(2,'0');
+      const m = now.value.getMinutes().toString().padStart(2,'0');
+      return h + ':' + m;
+    });
+    const bigDate = computed(() => {
+      const d = now.value;
+      const ws = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+      return (d.getMonth()+1) + '月' + d.getDate() + '日  ' + ws[d.getDay()];
+    });
+
+    // 数据
+    const dbReady      = ref(false);
+    const desktopPages = ref([]);
+    const dockApps     = ref([]);
+    const currentPage  = ref(0);
+    const settings     = ref({ ...DEFAULT_SETTINGS });
+    const wechatUsers  = ref([]);
+    const editMode     = ref(false);
+    const openFolder   = ref(null);
+    const desktopRef   = ref(null);
+    const gridRef      = ref(null);
+    const gridAreaRef  = ref(null);
+
+    // 当前页 30 格
+    const currentPageItems = computed(() => {
+      const page = desktopPages.value[currentPage.value];
+      if (!page) return Array(30).fill(null);
+      const arr = [];
+      for (let i = 0; i < 30; i++) arr.push(page[i] ?? null);
+      return arr;
+    });
+
+    // ===== 拖拽状态 =====
+    const drag = reactive({
+      active:   false,
+      fromIdx:  -1,
+      overIdx:  -1,
+      x:        0,
+      y:        0,
+      ghost:    null,     // { icon, color, name }
+      startX:   0,
+      startY:   0,
+      moved:    false,
+    });
+
+    // 判断当前悬停格子是否会触发文件夹合并
+    function willMerge(idx) {
+      if (!drag.active) return false;
+      if (drag.overIdx !== idx) return false;
+      if (drag.fromIdx === idx) return false;
+      const page = desktopPages.value[currentPage.value];
+      const over = page?.[idx];
+      const from = page?.[drag.fromIdx];
+      if (!over || !from) return false;
+      // 两个 app 拖在一起 => 合并成文件夹
+      return over.type === 'app' && from.type === 'app';
+    }
+
+    // ===== 长按计时器 =====
+    let longPressTimer = null;
+
+    function cancelLongPress() {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    }
+
+    function onBgMousedown(e) {
+      longPressTimer = setTimeout(() => { editMode.value = true; }, 600);
+    }
+    function onBgTouchstart(e) {
+      longPressTimer = setTimeout(() => { editMode.value = true; }, 600);
+    }
+
+    // ===== 获取格子索引（通过坐标） =====
+    function getIdxFromPoint(clientX, clientY) {
+      if (!gridRef.value) return -1;
+      const cells = gridRef.value.querySelectorAll('.cell');
+      for (let i = 0; i < cells.length; i++) {
+        const r = cells[i].getBoundingClientRect();
+        if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    // ===== 鼠标/触摸按下格子 =====
+    function onCellMousedown(e, idx) {
+      const page = desktopPages.value[currentPage.value];
+      const item = page?.[idx];
+      if (!item) return;
+      drag.startX = e.clientX;
+      drag.startY = e.clientY;
+      drag.moved  = false;
+
+      longPressTimer = setTimeout(() => {
+        editMode.value = true;
+        startDrag(idx, e.clientX, e.clientY);
+      }, 500);
+    }
+
+    function onCellTouchstart(e, idx) {
+      const page = desktopPages.value[currentPage.value];
+      const item = page?.[idx];
+      if (!item) return;
+      const t = e.touches[0];
+      drag.startX = t.clientX;
+      drag.startY = t.clientY;
+      drag.moved  = false;
+
+      longPressTimer = setTimeout(() => {
+        editMode.value = true;
+        startDrag(idx, t.clientX, t.clientY);
+      }, 500);
+    }
+
+    function startDrag(idx, clientX, clientY) {
+      const page = desktopPages.value[currentPage.value];
+      const item = page?.[idx];
+      if (!item) return;
+      drag.active  = true;
+      drag.fromIdx = idx;
+      drag.overIdx = idx;
+      drag.x       = clientX;
+      drag.y       = clientY;
+      drag.ghost   = { icon: item.icon, color: item.color, name: item.name };
+    }
+
+    // ===== 鼠标移动 =====
+    function onPointerMove(e) {
+      if (longPressTimer) {
+        const dx = Math.abs(e.clientX - drag.startX);
+        const dy = Math.abs(e.clientY - drag.startY);
+        if (dx > 6 || dy > 6) cancelLongPress();
+      }
+      if (!drag.active) return;
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      drag.moved = true;
+      const idx = getIdxFromPoint(e.clientX, e.clientY);
+      if (idx >= 0) drag.overIdx = idx;
+    }
+
+    function onTouchMove(e) {
+      const t = e.touches[0];
+      if (longPressTimer) {
+        const dx = Math.abs(t.clientX - drag.startX);
+        const dy = Math.abs(t.clientY - drag.startY);
+        if (dx > 6 || dy > 6) cancelLongPress();
+      }
+      if (!drag.active) return;
+      drag.x = t.clientX;
+      drag.y = t.clientY;
+      drag.moved = true;
+      const idx = getIdxFromPoint(t.clientX, t.clientY);
+      if (idx >= 0) drag.overIdx = idx;
+    }
+
+    // ===== 鼠标/触摸抬起 =====
+    function onPointerUp(e) {
+      cancelLongPress();
+      if (!drag.active) return;
+
+      const fromIdx = drag.fromIdx;
+      const toIdx   = drag.overIdx;
+
+      drag.active  = false;
+      drag.ghost   = null;
+
+      if (!drag.moved || fromIdx === toIdx) {
+        drag.fromIdx = -1;
+        drag.overIdx = -1;
+        return;
+      }
+
+      const page = desktopPages.value[currentPage.value];
+      const fromItem = page?.[fromIdx];
+      const toItem   = page?.[toIdx];
+
+      if (!fromItem) {
+        drag.fromIdx = -1;
+        drag.overIdx = -1;
+        return;
+      }
+
+      if (!toItem) {
+        // 移动到空格子
+        page[toIdx]   = fromItem;
+        page[fromIdx] = null;
+      } else if (toItem.type === 'folder') {
+        // 拖入文件夹
+        toItem.children.push(fromItem);
+        page[fromIdx] = null;
+      } else if (toItem.type === 'app' && fromItem.type === 'app') {
+        // 两个 app 合并为文件夹
+        const folder = {
+          id:       'folder-' + Date.now(),
+          type:     'folder',
+          name:     '文件夹',
+          children: [toItem, fromItem],
+        };
+        page[toIdx]   = folder;
+        page[fromIdx] = null;
+      } else {
+        // 普通交换
+        page[toIdx]   = fromItem;
+        page[fromIdx] = toItem;
+      }
+
+      drag.fromIdx = -1;
+      drag.overIdx = -1;
+      saveData();
+    }
+
+    function onCellEnter(idx) {
+      if (drag.active) drag.overIdx = idx;
+    }
+
+    // ===== 点击格子 =====
+    function onCellClick(e, idx) {
+      if (drag.moved) return;
+      if (actionSheet.show) return;
+      if (editMode.value) return;
+      const item = currentPageItems.value[idx];
+      if (!item) return;
+      if (item.type === 'folder') {
+        openFolder.value = item;
+      } else {
+        openApp(item);
+      }
+    }
+
+    function openApp(app) {
+      // 后续批次接入各视图
+      console.log('open:', app.appKey);
+    }
+
+    // ===== 操作菜单 =====
+    const actionSheet = reactive({ show:false, idx:-1, itemName:'' });
+
+    function showActionSheet(e, idx) {
+      cancelLongPress();
+      const item = desktopPages.value[currentPage.value]?.[idx];
+      if (!item) return;
+      actionSheet.idx      = idx;
+      actionSheet.itemName = item.name;
+      actionSheet.show     = true;
+    }
+
+    function actionRename() {
+      actionSheet.show = false;
+      const item = desktopPages.value[currentPage.value]?.[actionSheet.idx];
+      if (!item) return;
+      const name = prompt('重命名', item.name);
+      if (name && name.trim()) { item.name = name.trim(); saveData(); }
+    }
+    function actionEdit() {
+      actionSheet.show = false;
+      editMode.value   = true;
+    }
+    function actionDelete() {
+      actionSheet.show = false;
+      deleteItem(actionSheet.idx);
+    }
+
+    function deleteItem(idx) {
+      const page = desktopPages.value[currentPage.value];
+      if (page) { page[idx] = null; saveData(); }
+    }
+
+    function closeAll() {
+      actionSheet.show = false;
+      if (editMode.value) editMode.value = false;
+    }
+    function onHomeClick() {
+      actionSheet.show = false;
+      openFolder.value = null;
+      editMode.value   = false;
+      drag.active      = false;
+    }
+
+    // ===== 持久化 =====
+    async function saveData() {
+      await DB.set('desktopPages', JSON.parse(JSON.stringify(desktopPages.value)));
+      await DB.set('dockApps',     JSON.parse(JSON.stringify(dockApps.value)));
+      await DB.set('settings',     JSON.parse(JSON.stringify(settings.value)));
+      await DB.set('wechatUsers',  JSON.parse(JSON.stringify(wechatUsers.value)));
+    }
+
+    async function loadData() {
+      const [dp, da, st, wu] = await Promise.all([
+        DB.get('desktopPages'),
+        DB.get('dockApps'),
+        DB.get('settings'),
+        DB.get('wechatUsers'),
+      ]);
+      if (dp) {
+        desktopPages.value = dp;
+      } else {
+        const page0 = [];
+        for (let i = 0; i < 30; i++) page0.push(DEFAULT_APPS[i] ? { ...DEFAULT_APPS[i] } : null);
+        desktopPages.value = [page0];
+      }
+      dockApps.value    = da || DEFAULT_DOCK.map(a => ({ ...a }));
+      settings.value    = st ? { ...DEFAULT_SETTINGS, ...st } : { ...DEFAULT_SETTINGS };
+      wechatUsers.value = wu || DEFAULT_WECHAT_USERS.map(u => ({ ...u, messages:[] }));
+      dbReady.value     = true;
+    }
+
+    onMounted(() => {
+      loadData().catch(err => {
+        console.warn('DB failed, using defaults', err);
+        const page0 = [];
+        for (let i = 0; i < 30; i++) page0.push(DEFAULT_APPS[i] ? { ...DEFAULT_APPS[i] } : null);
+        desktopPages.value = [page0];
+        dockApps.value     = DEFAULT_DOCK.map(a => ({ ...a }));
+        settings.value     = { ...DEFAULT_SETTINGS };
+        wechatUsers.value  = DEFAULT_WECHAT_USERS.map(u => ({ ...u, messages:[] }));
+        dbReady.value      = true;
+      });
+    });
+
+    return {
+      sbTime, bigTime, bigDate,
+      dbReady, desktopPages, dockApps,
+      currentPage, currentPageItems,
+      settings, editMode, openFolder,
+      drag, willMerge,
+      desktopRef, gridRef, gridAreaRef,
+      actionSheet,
+      onBgMousedown, onBgTouchstart,
+      cancelLongPress,
+      onCellMousedown, onCellTouchstart,
+      onCellEnter, onCellClick,
+      showActionSheet,
+      onPointerMove, onTouchMove, onPointerUp,
+      openApp, deleteItem,
+      actionRename, actionEdit, actionDelete,
+      closeAll, onHomeClick, saveData,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
